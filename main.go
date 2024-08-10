@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/nicolerobin/go_callgraph/dot"
+
 	"github.com/nicolerobin/log"
 	"go.uber.org/zap"
 	"golang.org/x/tools/go/callgraph"
@@ -11,6 +11,8 @@ import (
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
+
+	"github.com/nicolerobin/go_callgraph/dot"
 )
 
 func main() {
@@ -48,12 +50,12 @@ func main() {
 		return
 	}
 
-	bytesOutput, err := dot.GenerateDot(ctx, ssaProg, callGraph, nil, pkgs[0].String())
+	bytesOutput, err := dot.GenerateDot(ctx, ssaProg, callGraph, pkgs[0].String())
 	if err != nil {
 		log.Error("dot.PrintOutput() failed", zap.Error(err))
 		return
 	}
-	log.Info("dot.PrintOutput() success, len(bytesOutput):%d, bytesOutput:%s", len(bytesOutput), string(bytesOutput))
+	log.Debug("dot.PrintOutput() success, len(bytesOutput):%d, bytesOutput:%s", len(bytesOutput), string(bytesOutput))
 
 	// save to file
 	imgName, err := dot.DotToImage(ctx, true, "go_callgraph", "svg", bytesOutput)
@@ -136,7 +138,7 @@ func printCallGraph(ctx context.Context, callGraph *callgraph.Graph) error {
 
 func genGraph(ctx context.Context, pkgs []*packages.Package) (*ssa.Program, []*ssa.Package, *callgraph.Graph) {
 	// ssaProg, ssaPkgs := ssautil.Packages(pkgs, 0)
-	ssaProg, ssaPkgs := ssautil.AllPackages(pkgs, 0)
+	ssaProg, ssaPkgs := ssautil.AllPackages(pkgs, ssa.InstantiateGenerics)
 	ssaProg.Build()
 
 	return ssaProg, ssaPkgs, static.CallGraph(ssaProg)
